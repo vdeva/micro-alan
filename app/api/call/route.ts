@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const prompt = `You are calling Dr. William Peoc'h to make an appointment on behalf of John. Let the doctor know you are calling on behalf of John. You need to convey to this doctor the following information:\n\n\n`;
+  const prompt = `You are calling ${process.env.DEMODOCNAME} to make an appointment on behalf of John. Let the doctor know you are calling on behalf of John. You need to convey to this doctor the following information:\n\n\n`;
 
   // Headers for the Bland.ai API request
   const headers = {
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   // Data to send to Bland.ai API
   const data = {
-    phone_number: "+33666189377",
+    phone_number: process.env.DEMOPHONE,
     from: null,
     task: prompt + subject,
     model: "enhanced",
