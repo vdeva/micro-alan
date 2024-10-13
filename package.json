@@ -2,25 +2,51 @@
   "name": "micro-alan",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "prettier . --write",
+    "relay": "nodemon ./server/index.js"
   },
   "dependencies": {
+    "@ai-sdk/mistral": "^0.0.42",
+    "@mistralai/mistralai": "^1.1.0",
+    "@next/env": "^14.2.15",
+    "@openai/realtime-api-beta": "github:openai/openai-realtime-api-beta",
+    "@vercel/postgres": "^0.10.0",
+    "ai": "^3.4.9",
+    "axios": "^1.7.7",
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.34.1",
+    "express": "^4.21.1",
+    "lucide-react": "^0.452.0",
+    "multer": "1.4.5-lts.1",
+    "next": "14.2.15",
+    "nodemon": "^3.1.7",
+    "openai": "^4.67.3",
+    "pixelarticons": "^1.8.1",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.15"
+    "react-feather": "^2.0.10",
+    "react-webcam": "^7.2.0",
+    "sass": "^1.79.5",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
+    "drizzle-kit": "^0.25.0",
     "eslint": "^8",
-    "eslint-config-next": "14.2.15"
+    "eslint-config-next": "14.2.15",
+    "postcss": "^8",
+    "prettier": "3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }
