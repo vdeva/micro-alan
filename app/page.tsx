@@ -1,101 +1,142 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from 'react';
+import CustomWebcam from '@/components/CustomWebcam';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [messages, setMessages] = useState([
+    { text: 'Hello, what medical problem can I help you with?', from: 'Doctor' },
+  ]);
+  const [input, setInput] = useState('');
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showWebcam, setShowWebcam] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleSend = async () => {
+    if (input.trim() === '' && !imgSrc) return;
+
+    const userMessage = { text: input, from: 'user', image: imgSrc || null };
+    
+    // Append user message to messages state
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      // Sending the message and history to the API
+      const response = await fetch('/api/chat-example', {
+        method: 'POST',
+        body: JSON.stringify({
+          text: input,
+          image: imgSrc,
+          history: messages.map(msg => ({ text: msg.text, from: msg.from })), // Send full message history
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.body) {
+        throw new Error('No body in response');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let result = '';
+      let done = false;
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        result += decoder.decode(value, { stream: true });
+      }
+
+      // Append bot response to messages state
+      const botMessage = { text: result, from: 'bot' };
+      setMessages((prev) => [...prev, botMessage]);
+
+    } catch (error) {
+      console.error('Error in AI response generation:', error);
+      setMessages((prev) => [
+        ...prev,
+        { text: "Sorry, something went wrong.", from: 'bot' },
+      ]);
+    } finally {
+      setLoading(false);
+      setImgSrc(null); // Clear the image after sending
+    }
+  };
+  
+
+  return (
+    <div className="flex flex-col h-screen bg-gray-100">
+      {/* Header */}
+      <div className="p-4 bg-blue-600 text-white text-center font-bold text-lg">
+        Chatbot
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="space-y-4">
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              className={`flex ${
+                message.from === 'user' ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <div
+                className={`${
+                  message.from === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black'
+                } p-3 rounded-lg max-w-xs  ${
+                  message.from === 'user' ? 'rounded-br-none' : 'rounded-bl-none'
+                }`}
+              >
+                {message.text}
+                {/* Affichage de l'image si présente */}
+                {message.image && (
+                  <img
+                    src={message.image}
+                    alt="Image envoyée par l'utilisateur"
+                    className="mt-2 max-w-full rounded-lg"
+                  />
+                )}
+              </div>
+            </div>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        {/* Composant CustomWebcam pour capturer une image */}
+        {showWebcam && <CustomWebcam imgSrc={imgSrc} setImgSrc={setImgSrc} setShowWebcam={setShowWebcam} />}
+      </div>
+
+      {/* Input pour le message texte */}
+      <div className="p-4 bg-white border-t border-gray-300">
+        <div className="flex">
+          <input
+            type="text"
+            className="flex-1 border rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 text-black"
+            placeholder="Tapez votre message..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}              
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <button
+            className="ml-2 bg-black text-white rounded-full w-[42px] h-[42px] flex justify-center items-center"
+            onClick={() => setShowWebcam((prev) => !prev)}
+          >
+            <img src='/icons/camera.svg' alt='Camera' />
+          </button>
+          <button
+            className="ml-2 bg-blue-500 text-white rounded-lg w-[42px] h-[42px] flex justify-center items-center"
+            onClick={handleSend}
+            disabled={loading}
+          >
+            <img src='/icons/send.svg' alt='Send' />
+          </button>
+        </div>
+
+        {/* Bouton pour afficher la webcam */}
+        
+      </div>
     </div>
   );
 }
